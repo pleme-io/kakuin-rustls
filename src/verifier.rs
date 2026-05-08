@@ -53,6 +53,10 @@ pub struct SpiffeIdVerifier {
     inner_client: Option<Arc<dyn ClientCertVerifier>>,
     inner_server: Option<Arc<dyn ServerCertVerifier>>,
     allow: Option<SpiffeIdAllowList>,
+    /// Held only for the client-mode (verify_server_cert) path —
+    /// SPIFFE certs have no DNS SAN so we bypass webpki's name check
+    /// and validate the chain manually via `EndEntityCert::verify_for_usage`.
+    roots: Option<Arc<RootCertStore>>,
 }
 
 impl SpiffeIdVerifier {
@@ -60,13 +64,14 @@ impl SpiffeIdVerifier {
     /// to validate *client* certs.
     #[must_use]
     pub fn client(roots: Arc<RootCertStore>, allow: Option<SpiffeIdAllowList>) -> Self {
-        let inner = WebPkiClientVerifier::builder(roots)
+        let inner = WebPkiClientVerifier::builder(roots.clone())
             .build()
             .expect("WebPkiClientVerifier::build");
         Self {
             inner_client: Some(inner),
             inner_server: None,
             allow,
+            roots: Some(roots),
         }
     }
 
@@ -74,13 +79,18 @@ impl SpiffeIdVerifier {
     /// client to validate the *server*'s cert.
     #[must_use]
     pub fn server(roots: Arc<RootCertStore>, allow: Option<SpiffeIdAllowList>) -> Self {
-        let inner = WebPkiServerVerifier::builder(roots)
+        // We keep WebPkiServerVerifier around for the signature-
+        // verification helpers, but `verify_server_cert` itself
+        // bypasses it and validates the chain manually so we can
+        // skip the DNS-name check (SPIFFE certs have URI SAN only).
+        let inner = WebPkiServerVerifier::builder(roots.clone())
             .build()
             .expect("WebPkiServerVerifier::build");
         Self {
             inner_client: None,
             inner_server: Some(inner),
             allow,
+            roots: Some(roots),
         }
     }
 
@@ -212,23 +222,42 @@ impl ServerCertVerifier for SpiffeIdVerifier {
         &self,
         end_entity: &CertificateDer<'_>,
         intermediates: &[CertificateDer<'_>],
-        server_name: &ServerName<'_>,
-        ocsp_response: &[u8],
+        _server_name: &ServerName<'_>,
+        _ocsp_response: &[u8],
         now: UnixTime,
     ) -> Result<ServerCertVerified, rustls::Error> {
-        let inner = self
-            .inner_server
+        // SPIFFE X.509 SVIDs carry ONLY a URI SAN
+        // (`spiffe://<trust-domain>/ns/.../sa/...`) — no DNS SAN, no IP
+        // SAN. rustls's default WebPkiServerVerifier validates the
+        // chain AND checks DNS-name match against the SNI; that DNS
+        // check fails ("certificate not valid for name X") because
+        // there's no DNS SAN to match.
+        //
+        // Verify the chain ourselves via rustls-webpki's
+        // `EndEntityCert::verify_for_usage` (chain + signature +
+        // validity) and SKIP the DNS check. SPIFFE-ID URI SAN
+        // matching is done in `check_spiffe_id` below.
+        let roots = self
+            .roots
             .as_ref()
-            .expect("SpiffeIdVerifier configured for server-side mTLS");
-        let verified = inner.verify_server_cert(
-            end_entity,
+            .ok_or_else(|| rustls::Error::General("kakuin: missing roots".into()))?;
+
+        let cert = webpki::EndEntityCert::try_from(end_entity)
+            .map_err(|e| rustls::Error::General(format!("kakuin: parse leaf: {e}")))?;
+
+        cert.verify_for_usage(
+            webpki::ALL_VERIFICATION_ALGS,
+            &roots.roots,
             intermediates,
-            server_name,
-            ocsp_response,
             now,
-        )?;
+            webpki::KeyUsage::server_auth(),
+            None,
+            None,
+        )
+        .map_err(|e| rustls::Error::General(format!("kakuin: chain validation: {e}")))?;
+
         self.check_spiffe_id(end_entity)?;
-        Ok(verified)
+        Ok(ServerCertVerified::assertion())
     }
 
     fn verify_tls12_signature(

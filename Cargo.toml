@@ -19,6 +19,9 @@ path = "src/lib.rs"
 kakuin-workload-api = { git = "https://github.com/pleme-io/kakuin-workload-api", branch = "main" }
 rustls = { version = "0.23", default-features = false, features = ["ring", "std"] }
 rustls-pki-types = "1"
+# Direct webpki access — for chain validation that SKIPS the DNS-name
+# check (SPIFFE certs carry only URI SANs, no DNS SANs).
+rustls-webpki = { version = "0.103", default-features = false, features = ["std", "ring"] }
 x509-cert = { version = "0.2", features = ["std", "pem"] }
 der = { version = "0.7", features = ["std"] }
 tokio = { version = "1.50", features = ["macros", "rt", "sync"] }
