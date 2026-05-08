@@ -1,0 +1,40 @@
+[package]
+name = "kakuin-rustls"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.89.0"
+authors = ["Pleme Team <team@pleme.io>"]
+description = "Bridge SPIFFE X.509 SVIDs (via kakuin-workload-api) to rustls Server/Client configs with identity-aware peer verification."
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/pleme-io/kakuin-rustls"
+readme = "README.md"
+keywords = ["spiffe", "spire", "rustls", "mtls", "identity"]
+categories = ["authentication", "cryptography", "network-programming"]
+
+[lib]
+name = "kakuin_rustls"
+path = "src/lib.rs"
+
+[dependencies]
+kakuin-workload-api = { version = "0.1", path = "../kakuin-workload-api" }
+rustls = { version = "0.23", default-features = false, features = ["ring", "std"] }
+rustls-pki-types = "1"
+x509-cert = { version = "0.2", features = ["std", "pem"] }
+der = { version = "0.7", features = ["std"] }
+tokio = { version = "1.50", features = ["macros", "rt", "sync"] }
+arc-swap = "1.7"
+futures = "0.3"
+thiserror = "2"
+tracing = "0.1"
+
+[dev-dependencies]
+tokio = { version = "1.50", features = ["full", "test-util"] }
+
+[lints.clippy]
+pedantic = "warn"
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = 3
+strip = true
