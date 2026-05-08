@@ -16,7 +16,7 @@ name = "kakuin_rustls"
 path = "src/lib.rs"
 
 [dependencies]
-kakuin-workload-api = { version = "0.1", path = "../kakuin-workload-api" }
+kakuin-workload-api = { git = "https://github.com/pleme-io/kakuin-workload-api", branch = "main" }
 rustls = { version = "0.23", default-features = false, features = ["ring", "std"] }
 rustls-pki-types = "1"
 x509-cert = { version = "0.2", features = ["std", "pem"] }
