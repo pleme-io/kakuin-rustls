@@ -3,5 +3,4 @@ result
 result-*
 .direnv
 .envrc.local
-Cargo.lock
 Cargo.build-spec.json

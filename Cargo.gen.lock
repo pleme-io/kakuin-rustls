@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "cargo_lock_sha256": "965a8533845d3abad6a91de27ac898e33a99a38d453b3c7bb5bd8166afee4a14",
+  "cargo_lock_sha256": "c0aaed55097387f2c9b257ccb5891770e86113bd8ba2388cc26758f80b16ce39",
   "target_resolves": {
     "base": {
       "aho-corasick-1.1.4": {
@@ -7446,7 +7446,7 @@
     }
   },
   "git_nar_sha256": {
-    "kakuin-workload-api-0.1.0": "sha256-2zAYPRqiwweER3Tq6VOVGfSXGWZk0OnQle1w0fKDDOc="
+    "kakuin-workload-api-0.1.0": "sha256-QJ41IcOk7dy49aQeOf+QEqMn5FOar3uojFn4yEO9QLQ="
   },
   "flake_metadata": {}
 }
