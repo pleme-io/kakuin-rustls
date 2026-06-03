@@ -304,7 +304,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -719,7 +719,7 @@ dependencies = [
 [[package]]
 name = "kakuin-workload-api"
 version = "0.1.0"
-source = "git+https://github.com/pleme-io/kakuin-workload-api?branch=main#ef32d6a10938e90a4b16c953fccb9e4b2281c278"
+source = "git+https://github.com/pleme-io/kakuin-workload-api?branch=main#13b4f3dfdb54e7d6e27ab927f8bc00d5c083f6c3"
 dependencies = [
  "async-stream",
  "ed25519-dalek",
@@ -1127,7 +1127,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -1340,7 +1340,7 @@ dependencies = [
  "getrandom 0.4.2",
  "once_cell",
  "rustix",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
